@@ -7,7 +7,7 @@
 */
 
 ///prepare secret file
-require_once("Akkochan.php");
+require_once("keyconfig.php");
 
 require_once("codebird.php");
 
