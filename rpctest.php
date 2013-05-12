@@ -34,7 +34,9 @@ $client = new Client($uri);
 try {
     $infos = $client->call('wp.getUsersBlogs', array($user, $passwd));
 } catch (Zend_Exception $e) {
+	echo "<pre>";
     echo $e->getMessage();
+	echo "</pre>";
 }
 
 
@@ -72,8 +74,10 @@ try {
 	$result = $client->call('metaWeblog.newPost',
                         array($blog_id, $user, $passwd, $contents, $publish)
                         );
-} catch (Zend_Exception $e) {
+} catch (\Exception $e) {
+	echo "<pre>";
     echo $e->getMessage();
+	echo "</pre>";
 }
  
 echo '<h2>post ID, if new post is suceeded</h2>';
@@ -86,8 +90,10 @@ try {
 	$new_post = $client->call('metaWeblog.getRecentPosts',
                            array($blog_id, $user, $passwd, 1)
                           );
-} catch (Zend_Exception $e) {
+} catch (\Exception $e) {
+	echo "<pre>";
 	echo $e->getMessage();
+	echo "</pre>";
 }
  
 echo '<h2>the newest post</h2>';

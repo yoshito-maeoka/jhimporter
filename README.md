@@ -15,4 +15,4 @@ how to install
 * install composer.phar like:
   $ curl -sS https://getcomposer.org/installer | php
 * update package like:   (but it doesn't work right, must be check)
-  $ php composer.phar update () 
+  $ php composer.phar install
