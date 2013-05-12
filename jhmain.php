@@ -65,9 +65,10 @@ if(count($result_array)>0){
 }
 */
 
+
+/*
 ///store data to data objects
 require_once("PostData.php");
-
 
 for($i = 0; $i<count($result_array); $i++){
     $postdata_array[$i] = new PostData(array(
@@ -84,18 +85,18 @@ for($i = 0; $i<count($result_array); $i++){
         "cntname" => $result_array[$i][10]
         ));
 }
-
+*/
 
 ///show result (for debug)
-for($i = 0; $i<count($postdata_array); $i++){
+for($i = 0; $i<count($result_array); $i++){
     print("-+++");
     print("<br />");
-    print($postdata_array[$i]->__get("text"));
+    print($result_array[$i]->__get("text"));
     print("<br />");
 }
 
 
-
+/*
 for($i = 0; $i<count($result_array); $i++){
             print("<br />");
             print("-++");
@@ -106,7 +107,7 @@ for($i = 0; $i<count($result_array); $i++){
             }
             
         }
-
+*/
 ///here comes wordpress export??
 
 

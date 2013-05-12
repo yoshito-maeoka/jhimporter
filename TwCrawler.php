@@ -8,7 +8,11 @@
 
 ///prepare secret file
 require_once("Akkochan.php");
+
 require_once("codebird.php");
+
+///store data to data objects
+require_once("PostData.php");
 
 class TwCrawler
 {
@@ -30,6 +34,7 @@ class TwCrawler
     */
     public $tw_crawler_result = array();
     public $tw_crawler_result_sum = array();
+    public $postdata_array = array();
 
     /*
     public $twpostids = array(0);
@@ -195,7 +200,7 @@ class TwCrawler
                 $last_id_str = $tw_statuses_0[0]->id;
                 $this->lastid_save($last_id_str);
                 }
-            ///extract individual information from twitter json result
+            ///extract individual information from twitter search result
             for ($i = 0; $i<count($tw_statuses_0); $i++){
                 $post_numid = $i;
             
@@ -256,8 +261,21 @@ class TwCrawler
                 }
         
                 
-            
+                $this->postdata_array[$i] = new PostData(array(
+                "servicename" => "twitter",
+                "level" => $tw_lvtag,
+                "id" => $tw_postid,
+                "username" => $tw_username,
+                "postdate" => $tw_posteddate_str,
+                "text" => $tw_text,
+                "mediaurl" => $tw_mediaurl,
+                "geox" => $tw_geo0coord_x,
+                "goey" => $tw_geo0coord_y,
+                "cityname" => $tw_cityname,
+                "cntname" => $tw_cntname
+                ));
 
+                /*
                 ///add information to array
                 array_push($this->tw_crawler_result, "twitter");
                 array_push($this->tw_crawler_result, $tw_lvtag);
@@ -270,12 +288,13 @@ class TwCrawler
                 array_push($this->tw_crawler_result, $tw_geo0coord_y); //lat NS
                 array_push($this->tw_crawler_result, $tw_cityname);
                 array_push($this->tw_crawler_result, $tw_cntname);
-
-
+                
                 array_push($this->tw_crawler_result_sum,$this->tw_crawler_result);
 
                 ///clear array
                 $this->tw_crawler_result = array();
+                */
+
         }
         
         /*
@@ -290,7 +309,7 @@ class TwCrawler
             
         }
         */
-    return $this->tw_crawler_result_sum;
+    return $this->postdata_array;
         }
 
         
