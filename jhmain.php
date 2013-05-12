@@ -6,11 +6,17 @@
  */
 
 
-///todo 130509
+///todo 130511
 /// timer chk
-/// mail text
 /// 
-
+/// mail title
+/// title: you have now x posts from ...
+/// mail text
+/// -kensuu
+/// -last post date
+///
+/// postdata modify
+/// make it inside the crawler
 
 
 ///prepare crawler(s)
