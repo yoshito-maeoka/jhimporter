@@ -38,55 +38,59 @@ try {
 }
 
 
-echo '<h2>ブログの基本情報</h2>';
+echo '<h2>basic info of the blog</h2>';
 echo '<pre>';
 var_dump($infos);
 echo '</pre>';
  
-// blog ID 基本的に1。
-// 3系では複数のブログが管理できるようなので増えるのかも？
+// blog ID, basically '1' is set.
 $blog_id = $infos[0]['blogid'];
  
-// 投稿データの作成
+// set posting data
 $contents = array(
-    'title'             => 'テスト投稿',
-    'categories'        => array('インテリア', '建築'),
-    'custom_fields'     => array(array('key' => 'field_key1', 'value' => 'field_key1のvalue'),
-                                 array('key' => 'field_key2', 'value' => 'field_key2のvalue')
+    'title'             => 'rpc post test',
+    'categories'        => array('something category', 'any other category'),
+    'custom_fields'     => array(array('key' => 'field_key1', 'value' => 'the value of field_key1'),
+                                 array('key' => 'field_key2', 'value' => 'the value of field_key2')
                                 ),
-    'description'       => 'テスト投稿の本文',
+    'description'       => 'this is content text',
     'dateCreated'       => null,
     'wp_slug'           => 'xml-rpc-testpost',
     'mt_allow_comments' => null,
     'mt_allow_pings'    => null,
     'mt_convert_breaks' => null,
     'mt_text_more'      => null,
-    'mt_excerpt'        => 'Wordpress XML-RPCのテスト',
-    'mt_keywords'       => array('icon', 'インスピレーション', 'どらえもん'),
+    'mt_excerpt'        => 'Wordpress RPC test, this is excerpt test',
+    'mt_keywords'       => array('brabrabra', 'blablabla', 'moinmoin'),
     'mt_tb_ping_urls'   => null,
 );
- 
-// 公開設定
+
+// this post shouldn't be published at first. 
 $publish = false;
  
-// 投稿を実行
-$result = $client->call('metaWeblog.newPost',
+try {
+	$result = $client->call('metaWeblog.newPost',
                         array($blog_id, $user, $passwd, $contents, $publish)
                         );
+} catch (Zend_Exception $e) {
+    echo $e->getMessage();
+}
  
-echo '<h2>実行結果 成功するとPost IDが返ってくる</h2>';
+echo '<h2>post ID, if new post is suceeded</h2>';
 echo '<pre>';
 echo $result;
 echo '</pre>';
  
-// 最新の記事を取得
-// この構造見るとmetaWeblog.newPostで拡張されてるものがわかる
-// 多分wp_author_idとかも指定できるとおもわれ。
-$new_post = $client->call('metaWeblog.getRecentPosts',
+
+try {
+	$new_post = $client->call('metaWeblog.getRecentPosts',
                            array($blog_id, $user, $passwd, 1)
                           );
+} catch (Zend_Exception $e) {
+	echo $e->getMessage();
+}
  
-echo '<h2>最新の投稿データ</h2>';
+echo '<h2>the newest post</h2>';
 echo '<pre>';
 var_dump($new_post);
 echo '</pre>';
