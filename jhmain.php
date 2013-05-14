@@ -46,12 +46,18 @@ $tw_crawl->tw_get_postcount = $g_get_postcount;
 //$result_array = $tw_crawl->tw_search();
 $result_array = array();
 
+/* TIMER CHECK. DON'T ERASE THIS. NOT GARBAGE!! 
+if($tw_crawl->tw_chk_timer() == 1){
+    $result_array = array_merge($result_array,$tw_crawl->tw_search());
+}
+*/
+
 $result_array = array_merge($result_array,$tw_crawl->tw_search());
 
 
 ///if there is post then send mail.
 
-/*
+/* SEND NOTIFICATION MAIL.DON'T ERASE THIS. NOT GARBAGE!!
 if(count($result_array)>0){
     my_send_mail(
     "info@ahonda.org",

@@ -71,6 +71,7 @@ class TwCrawler
         //lastidchk();
     }
 
+
     /**
      * lastid_chk
      * check latest checked ID from file
@@ -97,6 +98,45 @@ class TwCrawler
                 }
                 fclose($fp);
             }
+    }
+
+    /**
+     * tw_chk_timer
+     * check if at last task got search result
+     * 
+     * @return int tw_lstchk_flag
+     */
+
+    public function tw_chk_timer(){
+
+        ///check flag file
+        $fp = fopen("twlastchkflag.txt", "r");
+            if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+                
+            }else{
+                while ($line = fgets($fp)) {
+                    if($line != NULL){
+                    //print("line");    
+                    $tw_lstchk_flag = $line;        
+                    //print("<br />");
+                    //print($line);
+                    //print("<br />");
+                    }
+                }
+                fclose($fp);
+            }
+
+        ///force check flag at 1AM
+        if(date("G") == 1){
+            $tw_lstchk_flag = 1;
+            }
+
+        ///then run tw search query routin
+        return $tw_lstchk_flag; 
+
     }
 
     /**
@@ -180,10 +220,23 @@ class TwCrawler
             print("<br />");
             print("<br />");
 
+            ///set flag file to 1. (means need to send query again next time)
+            $fp = fopen("twlastchkflag.txt", "w");
+            if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+            }else{
+                fwrite($fp, 1);
+                fclose($fp);
+                //print("last id saved");
+                //print("<br />");
+            }
+
 
         }else{
-            echo count($tweets);
 
+            echo count($tweets);
 
             print("<pre>");
             var_dump($tweets);  
@@ -223,13 +276,6 @@ class TwCrawler
 
                 $tw_geocoord = $tw_statuses_0[$post_numid]->coordinates->coordinates;
 
-                /*
-                print("geo");
-                print("<br />");
-                print("<pre>");
-                var_dump($tw_geocoord);  
-                print("</pre>");
-                */
 
                 if($tw_geocoord != NULL){
                     $tw_geo0coord_x = $tw_geocoord[0];
@@ -241,25 +287,17 @@ class TwCrawler
                         $tw_geo0coord_x = ($tw_geocoord[0][0][0]+$tw_geocoord[0][1][0]+$tw_geocoord[0][2][0]+$tw_geocoord[0][3][0])*0.25;
                         $tw_geo0coord_y = ($tw_geocoord[0][0][1]+$tw_geocoord[0][1][1]+$tw_geocoord[0][2][1]+$tw_geocoord[0][3][1])*0.25;
                     }
-                /*
-                print("geo");
-                print("<br />");
-                print("<pre>");
-                var_dump($tw_geocoord);  
-                print("</pre>");
-                */
 
                 }
 
                 ///check if a tweet has photo and geo data
                 if($twmediaurl == NULL){
                     $tw_lvtag = 1;
-                }else if($twgeocoord == NULL){
+                    }else if($twgeocoord == NULL){
                     $tw_lvtag = 1;
-                }else{
+                    }else{
                     $tw_lvtag = 0;
-                }
-        
+                    }
                 
                 $this->postdata_array[$i] = new PostData(array(
                 "servicename" => "twitter",
@@ -274,42 +312,22 @@ class TwCrawler
                 "cityname" => $tw_cityname,
                 "cntname" => $tw_cntname
                 ));
-
-                /*
-                ///add information to array
-                array_push($this->tw_crawler_result, "twitter");
-                array_push($this->tw_crawler_result, $tw_lvtag);
-                array_push($this->tw_crawler_result, $tw_postid);
-                array_push($this->tw_crawler_result, $tw_posteddate_str);
-                array_push($this->tw_crawler_result, $tw_username);
-                array_push($this->tw_crawler_result, $tw_text);
-                array_push($this->tw_crawler_result, $tw_mediaurl);
-                array_push($this->tw_crawler_result, $tw_geo0coord_x); //long WE
-                array_push($this->tw_crawler_result, $tw_geo0coord_y); //lat NS
-                array_push($this->tw_crawler_result, $tw_cityname);
-                array_push($this->tw_crawler_result, $tw_cntname);
-                
-                array_push($this->tw_crawler_result_sum,$this->tw_crawler_result);
-
-                ///clear array
-                $this->tw_crawler_result = array();
-                */
-
-        }
-        
-        /*
-        for($i = 0; $i<count($tw_statuses_0); $i++){
-            print("<br />");
-            print("-++");
-            print("<br />");
-            for($j = 0; $j<11; $j++){
-            print($this->twcrawlerresultsum[$i][$j]);
-            print("-_-");
             }
-            
-        }
-        */
-    return $this->postdata_array;
+
+        ///after successs set flag to 0. no need to send query again next time.
+        $fp = fopen("twlastchkflag.txt", "w");
+            if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+            }else{
+                fwrite($fp, 0);
+                fclose($fp);
+                //print("last id saved");
+                //print("<br />");
+            }
+
+        return $this->postdata_array;
         }
 
         
