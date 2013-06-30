@@ -46,46 +46,26 @@ $tw_crawl->tw_get_postcount = $g_get_postcount;
 //$result_array = $tw_crawl->tw_search();
 $result_array = array();
 
+/* TIMER CHECK. DON'T ERASE THIS. NOT GARBAGE!! 
+if($tw_crawl->tw_chk_timer() == 1){
+    $result_array = array_merge($result_array,$tw_crawl->tw_search());
+}
+*/
+
 $result_array = array_merge($result_array,$tw_crawl->tw_search());
 
 
 ///if there is post then send mail.
-/*
+
+/* SEND NOTIFICATION MAIL.DON'T ERASE THIS. NOT GARBAGE!!
 if(count($result_array)>0){
-
-    if (mb_send_mail(
-        "info@ahonda.org", 
-        "TEST MAIL", 
-        "This is a test message.", 
-        "From: info@ahonda.org")) {
-        echo "mail sendet";
-    } else {
-        echo "fail to send mail";
-    }
+    my_send_mail(
+    "info@ahonda.org",
+    "NEW: ".count($result_array),
+    "last: ". $result_array[0]->__get("postdate"));
 }
 */
 
-
-/*
-///store data to data objects
-require_once("PostData.php");
-
-for($i = 0; $i<count($result_array); $i++){
-    $postdata_array[$i] = new PostData(array(
-        "servicename" => $result_array[$i][0],
-        "level" => $result_array[$i][1],
-        "id" => $result_array[$i][2],
-        "username" => $result_array[$i][3],
-        "postdate" => $result_array[$i][4],
-        "text" => $result_array[$i][5],
-        "mediaurl" => $result_array[$i][6],
-        "geox" => $result_array[$i][7],
-        "goey" => $result_array[$i][8],
-        "cityname" => $result_array[$i][9],
-        "cntname" => $result_array[$i][10]
-        ));
-}
-*/
 
 ///show result (for debug)
 for($i = 0; $i<count($result_array); $i++){
@@ -108,7 +88,37 @@ for($i = 0; $i<count($result_array); $i++){
             
         }
 */
+
 ///here comes wordpress export??
+
+
+
+///function
+
+/**
+* my_send_mail
+* send alert mail
+* 
+* @param String $mail_adress    email adress to send
+* @param String $mail_title     email title
+* @param String $mail_text      email text
+* 
+*/
+
+function my_send_mail($mail_adresse, $mail_title, $mail_text){
+    mb_language("uni");
+    mb_internal_encoding("UTF-8");
+
+    if (mb_send_mail(
+        $mail_adresse, 
+        $mail_title, 
+        $mail_text
+        )) {
+        echo "mail sendet";
+        } else {
+        echo "fail to send mail";
+        }
+    }
 
 
 ?>
