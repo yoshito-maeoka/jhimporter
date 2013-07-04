@@ -7,29 +7,32 @@
 */
 
 ///prepare secret file
-require_once("Akkochan.php");
+///require_once("keyconfig.php");
+
 require_once("codebird.php");
+
+///store data to data objects
+require_once("PostData.php");
 
 class TwCrawler
 {
+
+    //code bird instance
+    public $cb
+
     //hashtag
     public $tw_hashtag = "hashtagg";
     public $tw_get_postcount = 1;
 
     //lastpostid. check for if new post available
     //it must be saved and loaded from file.
+    //public $tw_lastpostid = 12345;
     public $tw_lastpostid = 12345;
 
     ///arrays for search result
-    ///maybe 2d array is better??
-    /*
-    (
-        (twitter,twlevel,postid,srcname,postdate,text,mediaurl,geox,goey,cityname,cntname),
-        (),,,,
-    )
-    */
     public $tw_crawler_result = array();
     public $tw_crawler_result_sum = array();
+    public $postdata_array = array();
 
     /*
     public $twpostids = array(0);
@@ -59,12 +62,12 @@ class TwCrawler
      * actually ... the constructor of php class should be ___construct() ...
      */
 
-
-    public function TwCrawler()
+    public function __construct()
     {
-        ///maybe here chk last post id?
-        //lastidchk();
+    ///setup twitter
+    tw_setup();
     }
+
 
     /**
      * lastid_chk
@@ -73,8 +76,38 @@ class TwCrawler
      */
 
     public function lastid_chk(){
+        
+        $fp = fopen("twlastid.txt", "r");
+        if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+                
+            }else{
+                while ($line = fgets($fp)) {
+                    if($line != NULL){
+                        print("line");    
+                        $this->twlastpostid = $line;        
+                        print("<br />");
+                        print($line);
+                        print("<br />");
+                    }
+                }
+                fclose($fp);
+            }
+    }
 
-            $fp = fopen("twlastid.txt", "r");
+    /**
+     * tw_chk_timer
+     * check if at last task got search result
+     * 
+     * @return int tw_lstchk_flag
+     */
+
+    public function tw_chk_timer(){
+
+        ///check flag file
+        $fp = fopen("twlastchkflag.txt", "r");
             if(!$fp)
             {
                 print("couldn't open file");
@@ -83,15 +116,32 @@ class TwCrawler
             }else{
                 while ($line = fgets($fp)) {
                     if($line != NULL){
-                    print("line");    
-                    $this->twlastpostid = $line;        
-                    print("<br />");
-                    print($line);
-                    print("<br />");
+                    //print("line");    
+                    $tw_lstchk_flag = $line;        
+                    //print("<br />");
+                    //print($line);
+                    //print("<br />");
                     }
                 }
                 fclose($fp);
             }
+        //print($tw_lstchk_flag);
+
+        /*
+        ///force check flag at 1AM. cron each x hours
+        if(date("G") == 1){
+            $tw_lstchk_flag = 1;
+            }
+        */
+
+        ///for debug. force flag at 0min, cron => each x0 min 
+        if(date("i") < 10){
+            $tw_lstchk_flag = 1;
+            }
+
+        ///then run tw search query routin
+        return $tw_lstchk_flag; 
+
     }
 
     /**
@@ -126,12 +176,9 @@ class TwCrawler
     public function tw_search() 
     {   
         ///check last checked ID
-        //$this->lastidchk();
+        $this->lastid_chk();
        
-        Codebird::setConsumerKey(TW_CONSUMER_KEY, TW_CONSUMER_SECRET);
-        //Codebird::setConsumerKey("TW_CONSUMER_KEY", TW_CONSUMER_SECRET);
-        $cb = Codebird::getInstance();
-        $cb->setToken(TW_ACCESS_TOKEN, TW_ACCESS_TOKEN_SECRET);
+        print($this->twlastpostid);
 
         /*
         var_dump($cb); 
@@ -157,45 +204,66 @@ class TwCrawler
         //$g_hashtag = "#fogindomobon";
         //$g_hashtag = "#jhdevtest";
         
-        //'count' => $this->twgetpostcount
+        'count' => $this->tw_get_postcount,
         //'since_id' => 1,
-        //'since_id' => $this->twlastpostid,
-        'count' => 50
+        'since_id' => $this->twlastpostid,
+        //'count' => 50 
         );
 
         ///get tweets
-        $tweets = (array) $cb->search_tweets($params);
-        ///here must catch error from tw server
+        $tweets = (array) $this->cb->search_tweets($params);
+
+        ///here is catch error from tw server
         ///https://dev.twitter.com/docs/error-codes-responses
-
-
         if($tweets["httpstatus"] != 200){
             print("Something wrong with Twitter: ");
             print($tweets["httpstatus"]);
             print("<br />");
             print("<br />");
 
+            ///set flag file to 1. (means need to send query again next time)
+            $this->file_rewrite("twlastchkflag.txt",1);
+            
+            /*
+            $fp = fopen("twlastchkflag.txt", "w");
+            if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+            }else{
+                fwrite($fp, 1);
+                fclose($fp);
+                //print("last id saved");
+                //print("<br />");
+            }
+            */
+            ///if something wrong with twitter,(couldn't authorized,server error,etc) exit here.
+            return;
 
         }else{
+            ///
+
             echo count($tweets);
 
-
+            /*
             print("<pre>");
             var_dump($tweets);  
             print("</pre>");
+            */
             array_pop($tweets);//cut last (status code)
 
             $tw_lvtag = 0;
 
             $tw_statuses_0 = $tweets["statuses"];
-            $post_numid = 1;
+            //$post_numid = 1;
 
             ///count if there is new post
             if(count($tw_statuses_0)>0){
                 $last_id_str = $tw_statuses_0[0]->id;
                 $this->lastid_save($last_id_str);
                 }
-            ///extract individual information from twitter json result
+
+            ///extract individual information from twitter search result
             for ($i = 0; $i<count($tw_statuses_0); $i++){
                 $post_numid = $i;
             
@@ -218,13 +286,6 @@ class TwCrawler
 
                 $tw_geocoord = $tw_statuses_0[$post_numid]->coordinates->coordinates;
 
-                /*
-                print("geo");
-                print("<br />");
-                print("<pre>");
-                var_dump($tw_geocoord);  
-                print("</pre>");
-                */
 
                 if($tw_geocoord != NULL){
                     $tw_geo0coord_x = $tw_geocoord[0];
@@ -236,65 +297,88 @@ class TwCrawler
                         $tw_geo0coord_x = ($tw_geocoord[0][0][0]+$tw_geocoord[0][1][0]+$tw_geocoord[0][2][0]+$tw_geocoord[0][3][0])*0.25;
                         $tw_geo0coord_y = ($tw_geocoord[0][0][1]+$tw_geocoord[0][1][1]+$tw_geocoord[0][2][1]+$tw_geocoord[0][3][1])*0.25;
                     }
-                /*
-                print("geo");
-                print("<br />");
-                print("<pre>");
-                var_dump($tw_geocoord);  
-                print("</pre>");
-                */
 
                 }
 
                 ///check if a tweet has photo and geo data
                 if($twmediaurl == NULL){
                     $tw_lvtag = 1;
-                }else if($twgeocoord == NULL){
+                    }
+                else if($twgeocoord == NULL){
                     $tw_lvtag = 1;
-                }else{
+                    }
+                else{
                     $tw_lvtag = 0;
-                }
-        
+                    }
                 
-            
-
-                ///add information to array
-                array_push($this->tw_crawler_result, "twitter");
-                array_push($this->tw_crawler_result, $tw_lvtag);
-                array_push($this->tw_crawler_result, $tw_postid);
-                array_push($this->tw_crawler_result, $tw_posteddate_str);
-                array_push($this->tw_crawler_result, $tw_username);
-                array_push($this->tw_crawler_result, $tw_text);
-                array_push($this->tw_crawler_result, $tw_mediaurl);
-                array_push($this->tw_crawler_result, $tw_geo0coord_x); //long WE
-                array_push($this->tw_crawler_result, $tw_geo0coord_y); //lat NS
-                array_push($this->tw_crawler_result, $tw_cityname);
-                array_push($this->tw_crawler_result, $tw_cntname);
-
-
-                array_push($this->tw_crawler_result_sum,$this->tw_crawler_result);
-
-                ///clear array
-                $this->tw_crawler_result = array();
-        }
-        
-        /*
-        for($i = 0; $i<count($tw_statuses_0); $i++){
-            print("<br />");
-            print("-++");
-            print("<br />");
-            for($j = 0; $j<11; $j++){
-            print($this->twcrawlerresultsum[$i][$j]);
-            print("-_-");
+                $this->postdata_array[$i] = new PostData(array(
+                "servicename" => "twitter",
+                "level" => $tw_lvtag,
+                "id" => $tw_postid,
+                "username" => $tw_username,
+                "postdate" => $tw_posteddate_str,
+                "text" => $tw_text,
+                "mediaurl" => $tw_mediaurl,
+                "geox" => $tw_geo0coord_x,
+                "goey" => $tw_geo0coord_y,
+                "cityname" => $tw_cityname,
+                "cntname" => $tw_cntname
+                ));
             }
-            
-        }
-        */
-    return $this->tw_crawler_result_sum;
-        }
 
-        
+        ///after successs set flag to 0. no need to send query again next time.
+        $this->file_rewrite("twlastchkflag.txt",0);
+        /*
+        $fp = fopen("twlastchkflag.txt", "w");
+            if(!$fp)
+            {
+                print("couldn't open file");
+                print("<br />");
+            }else{
+                fwrite($fp, 0);
+                fclose($fp);
+                //print("last id saved");
+                //print("<br />");
+            }
+        */
+        return $this->postdata_array;
+        }
     }
+
+    /**
+     * tw_setup
+     * setup codebird instance for twitter
+     * 
+     * 
+     */
+
+    public function tw_setup(){
+        Codebird::setConsumerKey(TW_CONSUMER_KEY, TW_CONSUMER_SECRET);
+        $this->cb = Codebird::getInstance();
+        $this->cb->setToken(TW_ACCESS_TOKEN, TW_ACCESS_TOKEN_SECRET);
+    }
+
+    /**
+     * file_rewrite
+     * rewrite a file
+     * 
+     * 
+     */
+
+    public function file_rewrite($filepath,$content){
+        //$fp = fopen("twlastchkflag.txt", "w");
+        $fp = fopen($filepath, "w");
+        if(!$fp){
+            print("couldn't open file");
+            print("<br />");
+        }else{
+            fwrite($fp, $content);
+            fclose($fp);
+            //print("last id saved");
+            //print("<br />");
+        }
+    }
+
 }
 
 ?>
