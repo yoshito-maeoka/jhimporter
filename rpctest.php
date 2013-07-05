@@ -1,4 +1,6 @@
 <?php
+///test 0
+
 require_once 'jhimporter-config.php';
 require 'vendor/autoload.php';
 
