@@ -293,11 +293,11 @@ class TwCrawler
                 ///check if a tweet has photo and geo data
                 if($twmediaurl == NULL){
                     $tw_lvtag = 1;
-                    }else if($twgeocoord == NULL){
+                }else if($twgeocoord == NULL){
                     $tw_lvtag = 1;
-                    }else{
+                }else{
                     $tw_lvtag = 0;
-                    }
+                }
                 
                 $this->postdata_array[$i] = new PostData(array(
                 "servicename" => "twitter",
