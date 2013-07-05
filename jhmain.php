@@ -60,7 +60,7 @@ $result_array = array_merge($result_array,$tw_crawl->tw_search());
 /* SEND NOTIFICATION MAIL.DON'T ERASE THIS. NOT GARBAGE!!
 if(count($result_array)>0){
     my_send_mail(
-    "info@ahonda.org",
+    "mail",
     "NEW: ".count($result_array),
     "last: ". $result_array[0]->__get("postdate"));
 }
